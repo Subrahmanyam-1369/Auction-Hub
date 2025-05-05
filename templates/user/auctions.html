@@ -1,0 +1,730 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Auctions - AuctionHub{% endblock %}
+
+{% block sidebar_items %}
+<li>
+    <a href="{{ url_for('user_dashboard') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-home mr-3 text-lg"></i>
+        <span>Home</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_auctions') }}" class="sidebar-item active flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-gavel mr-3 text-lg"></i>
+        <span>Auctions</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_bids') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-hand-paper mr-3 text-lg"></i>
+        <span>Your Bids</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_profile') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-user mr-3 text-lg"></i>
+        <span>View Profile</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('update_profile') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-user-edit mr-3 text-lg"></i>
+        <span>Update Profile</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('logout') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-sign-out-alt mr-3 text-lg"></i>
+        <span>Logout</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">Auctions</h1>
+        <p class="text-gray-600">Browse available auctions and place your bids</p>
+    </div>
+    <div class="flex space-x-2">
+        <button id="normal-tab" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+            Normal Auctions
+        </button>
+        <button id="mortgage-tab" class="bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-medium">
+            Mortgage Auctions <i class="fas fa-lock ml-1 text-xs"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+        <div class="flex-1">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="search" placeholder="Search auctions..." 
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+        </div>
+        <div class="w-full md:w-1/4">
+            <select id="status" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="ending-soon" {% if status_filter == 'ending-soon' %}selected{% endif %}>Ending Soon</option>
+                <option value="ended" {% if status_filter == 'ended' %}selected{% endif %}>Ended</option>
+                <option value="won" {% if status_filter == 'won' %}selected{% endif %}>Won By You</option>
+                <option value="" {% if status_filter == '' %}selected{% endif %}>All (Deprecated - defaults to Active)</option> {# Consider removing 'All' or defining its behavior clearly #}
+            </select>
+        </div>
+        <div class="w-full md:w-1/4">
+            <select id="sort" name="sort" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="end_date_asc" {% if sort_order == 'end_date_asc' %}selected{% endif %}>Ending Soonest</option>
+                <option value="newest" {% if sort_order == 'newest' %}selected{% endif %}>Newest</option>
+                <option value="price_asc" {% if sort_order == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_desc" {% if sort_order == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Normal Auctions Section -->
+<div id="normal-auctions" class="space-y-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">Normal Auctions</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% if normal_auctions %}
+            {% for auction in normal_auctions %}
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden auction-card">
+                <div class="relative">
+                    <img src="{{ url_for('static', filename='images/' + auction.main_image) }}" alt="{{ auction.name }}" class="w-full h-48 object-cover">
+                    {% if auction.status == 'active' and auction.days_left < 1 %}
+                    <div class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        <i class="fas fa-clock mr-1"></i> Ending Soon
+                    </div>
+                    {% elif auction.status == 'ended' %}
+                    <div class="absolute top-2 right-2 bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        <i class="fas fa-gavel mr-1"></i> Ended
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1 auction-title">{{ auction.name }}</h3>
+                    <p class="text-gray-600 text-sm mb-3 line-clamp-2 auction-desc">{{ auction.description }}</p>
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <p class="text-gray-500 text-xs">{% if auction.status == 'ended' %}Final Price{% else %}Current Bid{% endif %}</p>
+                            <p class="text-indigo-600 font-bold">${{ "%.2f"|format(auction.current_bid or auction.starting_price) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs">{% if auction.status == 'ended' %}Ended On{% else %}Ends in{% endif %}</p>
+                            <p class="text-indigo-600 font-bold">{{ auction.time_left }}</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        {% if auction.status == 'active' %}
+                        <button class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2 rounded-lg transition-all text-sm bid-button" 
+                                data-id="{{ auction.id }}" 
+                                data-current-bid="{{ auction.current_bid or auction.starting_price }}">
+                            Bid Now
+                        </button>
+                        {% else %}
+                        <button class="flex-1 bg-gray-400 text-white text-center py-2 rounded-lg text-sm" disabled>
+                            Auction Ended
+                        </button>
+                        {% endif %}
+                        <button class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all text-sm view-button" 
+                                data-id="{{ auction.id }}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all text-sm watchlist-toggle-btn"
+                                data-id="{{ auction.id }}" data-type="normal">
+                            <i class="{% if auction.in_watchlist %}fas text-red-500{% else %}far{% endif %} fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-3 text-center py-12">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-search text-gray-400 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-800 mb-2">No auctions found</h3>
+                <p class="text-gray-600">Try changing your filters or check back later for new listings.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    {% if normal_auctions|length > 9 %}
+    <div class="mt-6 flex justify-center">
+        <nav class="flex items-center space-x-2">
+            <a href="#" class="px-3 py-1 bg-indigo-600 text-white rounded-md">1</a>
+            <a href="#" class="px-3 py-1 bg-white text-gray-700 hover:bg-gray-100 rounded-md">2</a>
+            <a href="#" class="px-3 py-1 bg-white text-gray-700 hover:bg-gray-100 rounded-md">3</a>
+            <span class="px-3 py-1">...</span>
+            <a href="#" class="px-3 py-1 bg-white text-gray-700 hover:bg-gray-100 rounded-md">10</a>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mortgage Auctions Section (Premium) -->
+<div id="mortgage-auctions" class="space-y-6 hidden">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-800">Mortgage Auctions</h2>
+        <div class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full text-sm font-medium">
+            Premium Feature
+        </div>
+    </div>
+    
+    <!-- Premium Locked Message -->
+    <div class="bg-white rounded-xl shadow-sm p-8 text-center border-2 border-dashed border-indigo-200">
+        <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-lock text-indigo-600 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Premium Feature Locked</h3>
+        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+            Mortgage auctions are only available for premium members. Upgrade your account to access exclusive property auctions.
+        </p>
+        <a href="#" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition-all">
+            Upgrade to Premium
+        </a>
+    </div>
+</div>
+
+<!-- Bid Modal -->
+<div id="bid-modal" class="hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Place a Bid</h3>
+                <button id="close-bid-modal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <h4 id="bid-item-name" class="text-lg font-medium text-gray-800 mb-1">Vintage Watch</h4>
+                <div class="flex justify-between mb-3">
+                    <p class="text-gray-600 text-sm">Current Bid:</p>
+                    <p id="current-bid" class="text-indigo-600 font-bold">$750</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="bid-amount" class="block text-gray-700 text-sm font-medium mb-2">Your Bid</label>
+                    <input type="number" id="bid-amount" name="bid-amount" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Enter amount">
+                    <p id="bid-error" class="hidden mt-1 text-xs text-red-500">Your bid must be higher than the current bid.</p>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="flex justify-between mb-2">
+                        <p class="text-gray-600">Your Bid:</p>
+                        <p id="your-bid-display" class="font-medium">$0</p>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <p class="text-gray-500">Service Fee (5%):</p>
+                        <p id="service-fee" class="text-gray-500">$0</p>
+                    </div>
+                    <div class="flex justify-between font-bold mt-2">
+                        <p>Total:</p>
+                        <p id="total-amount">$0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button id="cancel-bid" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all">
+                    Cancel
+                </button>
+                <button id="confirm-bid" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-all">
+                    Place Bid
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product View Modal -->
+<div id="product-modal" class="hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Product Details</h3>
+                <button id="close-product-modal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <img id="product-image" src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product" class="w-full h-64 object-cover rounded-lg">
+                    <div class="grid grid-cols-4 gap-2 mt-2">
+                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
+                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
+                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
+                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
+                    </div>
+                </div>
+                <div>
+                    <h2 id="product-name" class="text-2xl font-bold text-gray-800 mb-2">Vintage Watch</h2>
+                    <div class="mb-4">
+                        <span class="inline-block bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                            <i class="fas fa-clock mr-1"></i> Ending in <span id="product-time-left">3d 12h</span>
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <p class="text-gray-500 text-sm">Current Bid</p>
+                            <p id="product-current-bid" class="text-indigo-600 font-bold text-2xl">$750</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Starting Price</p>
+                            <p id="product-starting-price" class="text-gray-700 font-medium">$500</p>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-800 mb-2">Description</h4>
+                        <p id="product-description" class="text-gray-600">A rare vintage watch from the 1950s in excellent condition. This timepiece features a mechanical movement, stainless steel case, and original leather strap. Perfect for collectors and enthusiasts alike.</p>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-800 mb-2">Details</h4>
+                        <ul class="text-gray-600 text-sm space-y-1">
+                            <li><span class="font-medium">Condition:</span> Excellent</li>
+                            <li><span class="font-medium">Brand:</span> Omega</li>
+                            <li><span class="font-medium">Year:</span> 1956</li>
+                            <li><span class="font-medium">Seller:</span> VintageTimepieces</li>
+                        </ul>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button id="modal-bid-button" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-all" data-id="" data-type="normal">
+                            Place Bid
+                        </button>
+                        <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all watchlist-button" data-id="" data-type="normal">
+                            <i class="far fa-heart mr-1"></i> <span>Watch</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    $(document).ready(function() {
+        // Tab switching
+        $('#normal-tab').click(function() {
+            $(this).removeClass('bg-white text-gray-700').addClass('bg-indigo-600 text-white');
+            $('#mortgage-tab').removeClass('bg-indigo-600 text-white').addClass('bg-white text-gray-700');
+            $('#normal-auctions').removeClass('hidden');
+            $('#mortgage-auctions').addClass('hidden');
+        });
+        
+        $('#mortgage-tab').click(function() {
+            $(this).removeClass('bg-white text-gray-700').addClass('bg-indigo-600 text-white');
+            $('#normal-tab').removeClass('bg-indigo-600 text-white').addClass('bg-white text-gray-700');
+            $('#mortgage-auctions').removeClass('hidden');
+            $('#normal-auctions').addClass('hidden');
+        });
+        
+        // Function to update URL and reload page based on filters/sort
+        function applyFilters() {
+            const status = $('#status').val();
+            const sort = $('#sort').val();
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('status', status);
+            currentUrl.searchParams.set('sort', sort);
+            window.location.href = currentUrl.toString();
+        }
+
+        // Event listeners for dropdown changes
+        $('#status').on('change', applyFilters);
+        $('#sort').on('change', applyFilters);
+        
+        // Search filter
+        $('#search').on('keyup', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            $('.auction-card').each(function() {
+                const title = $(this).find('.auction-title').text().toLowerCase();
+                const desc = $(this).find('.auction-desc').text().toLowerCase();
+                if (title.includes(searchTerm) || desc.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+        
+        // Bid Modal
+        $('.bid-button').click(function() {
+            const itemId = $(this).data('id');
+            const currentBid = parseFloat($(this).data('current-bid') || 0);
+            
+            // Get item name from the card
+            const itemName = $(this).closest('.auction-card').find('.auction-title').text();
+            
+            $('#bid-item-name').text(itemName);
+            $('#current-bid').text('$' + currentBid.toFixed(2));
+            $('#bid-amount').val((currentBid + 10).toFixed(2)); 
+            updateBidTotals(currentBid + 10);
+            
+            // Set the product ID on the confirm button
+            $('#confirm-bid').data('product-id', itemId);
+            $('#confirm-bid').attr('data-product-id', itemId); // For jQuery compatibility
+
+            $('#bid-modal').removeClass('hidden');
+        });
+        
+        $('#close-bid-modal, #cancel-bid').click(function() {
+            $('#bid-modal').addClass('hidden');
+        });
+        
+        $('#bid-amount').on('input', function() {
+            updateBidTotals($(this).val());
+        });
+        
+        function updateBidTotals(amount) {
+            amount = parseFloat(amount) || 0;
+            const serviceFee = amount * 0.05;
+            const total = amount + serviceFee;
+            
+            $('#your-bid-display').text('$' + amount.toFixed(2));
+            $('#service-fee').text('$' + serviceFee.toFixed(2));
+            $('#total-amount').text('$' + total.toFixed(2));
+            
+            // Validate bid
+            const currentBid = parseFloat($('#current-bid').text().replace('$', ''));
+            if (amount <= currentBid) {
+                $('#bid-error').removeClass('hidden');
+                $('#confirm-bid').prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+            } else {
+                $('#bid-error').addClass('hidden');
+                $('#confirm-bid').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
+            }
+        }
+        
+        $('#confirm-bid').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Get product ID either from data attribute or from bid button
+            const itemId = parseInt($(this).data('product-id') || $(this).attr('data-product-id') || 0);
+            const amount = parseFloat($('#bid-amount').val());
+            
+            console.log("Placing bid on product ID:", itemId, "Amount:", amount);
+            
+            if (!itemId || isNaN(itemId) || itemId <= 0) {
+                console.error("Invalid product ID for bid:", itemId);
+                alert("Error: Invalid product ID");
+                return false;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                console.error("Invalid bid amount:", amount);
+                alert("Error: Please enter a valid bid amount");
+                return false;
+            }
+            
+            // Validate bid against current bid
+            const currentBid = parseFloat($('#current-bid').text().replace('$', '').trim());
+            if (amount <= currentBid) {
+                $('#bid-error').removeClass('hidden');
+                return false;
+            }
+            
+            // Disable the button to prevent multiple clicks
+            $(this).prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+            $(this).text('Processing...');
+            
+            // Send API request to place bid
+            $.ajax({
+                url: '/api/bid',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    product_id: itemId,
+                    amount: amount,
+                    type: 'normal'
+                }),
+                success: function(response) {
+                    console.log("Bid API response:", response);
+                    if (response.success) {
+                        // Update UI with new bid amount
+                        $('.bid-button[data-id="' + itemId + '"]').data('current-bid', response.current_bid);
+                        $('.bid-button[data-id="' + itemId + '"]').attr('data-current-bid', response.current_bid);
+                        
+                        $('.auction-card .bid-button[data-id="' + itemId + '"]').closest('.auction-card')
+                            .find('.text-indigo-600.font-bold').first().text('$' + response.current_bid.toFixed(2));
+                        
+                        // Show success message
+                        alert('Bid placed successfully!');
+                        $('#bid-modal').addClass('hidden');
+                        
+                        // Refresh the page to show updated data
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        // Handle unexpected success format
+                        alert('Bid placed but received unexpected response format');
+                        $('#bid-modal').addClass('hidden');
+                    }
+                },
+                error: function(xhr) {
+                    // Re-enable the button
+                    $('#confirm-bid').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
+                    $('#confirm-bid').text('Place Bid');
+                    
+                    const response = xhr.responseJSON || {};
+                    console.error("Bid API error:", response);
+                    
+                    if (response.error && response.error.includes("higher than current bid")) {
+                        $('#bid-error').text(response.error).removeClass('hidden');
+                    } else {
+                        alert('Error: ' + (response.error || 'Could not place bid'));
+                    }
+                }
+            });
+            
+            return false;
+        });
+        
+        // Product View Modal
+        $('.view-button').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const itemId = $(this).data('id');
+            console.log("View button clicked for product ID:", itemId);
+            
+            if (!itemId) {
+                console.error("Missing product ID");
+                alert("Error: Could not view product details");
+                return false;
+            }
+            
+            const card = $(this).closest('.auction-card');
+            
+            // Get product details from the card
+            const productName = card.find('.auction-title').text();
+            const productDescription = card.find('.auction-desc').text();
+            const currentBid = card.find('.text-indigo-600.font-bold').first().text().replace('$', '').trim();
+            const timeLeft = card.find('.text-indigo-600.font-bold').last().text().trim();
+            const imageSrc = card.find('img').attr('src');
+            
+            console.log("Product details from card:", {
+                name: productName,
+                description: productDescription,
+                currentBid: currentBid,
+                timeLeft: timeLeft
+            });
+            
+            // Update modal
+            $('#product-name').text(productName);
+            $('#product-description').text(productDescription);
+            $('#product-current-bid').text('$' + parseFloat(currentBid).toFixed(2));
+            $('#product-starting-price').text('$' + (parseFloat(currentBid) * 0.9).toFixed(2)); // Estimate starting price
+            $('#product-time-left').text(timeLeft);
+            $('#product-image').attr('src', imageSrc);
+            
+            // Setup bid button in modal with specific data attributes
+            $('#modal-bid-button').data('id', itemId);
+            $('#modal-bid-button').attr('data-id', itemId); // For jQuery compatibility 
+            $('#modal-bid-button').data('current-bid', currentBid);
+            $('#modal-bid-button').attr('data-current-bid', currentBid); // For jQuery compatibility
+            
+            // Also setup watchlist button 
+            $('.watchlist-button').data('id', itemId);
+            $('.watchlist-button').attr('data-id', itemId); // For jQuery compatibility
+            
+            // Check watchlist status
+            $.ajax({
+                url: '/api/watchlist/status',
+                type: 'GET',
+                data: {
+                    product_id: itemId,
+                    product_type: 'normal'
+                },
+                success: function(response) {
+                    console.log("Watchlist status response:", response);
+                    if (response.in_watchlist) {
+                        $('.watchlist-button').find('i').removeClass('far').addClass('fas text-red-500');
+                        $('.watchlist-button').find('span').text(' Watching');
+                    } else {
+                        $('.watchlist-button').find('i').removeClass('fas text-red-500').addClass('far');
+                        $('.watchlist-button').find('span').text(' Watch');
+                    }
+                },
+                error: function(xhr) {
+                    console.error("Error checking watchlist status:", xhr.responseJSON);
+                    // Default to not watching if error
+                    $('.watchlist-button').find('i').removeClass('fas text-red-500').addClass('far');
+                    $('.watchlist-button').find('span').text(' Watch');
+                }
+            });
+            
+            // If auction ended, disable bid button
+            if (timeLeft === "Ended") {
+                $('#modal-bid-button').attr('disabled', true).addClass('opacity-50 cursor-not-allowed');
+            } else {
+                $('#modal-bid-button').attr('disabled', false).removeClass('opacity-50 cursor-not-allowed');
+            }
+            
+            $('#product-modal').removeClass('hidden');
+            return false;
+        });
+        
+        $('#close-product-modal').click(function() {
+            $('#product-modal').addClass('hidden');
+        });
+        
+        $('#modal-bid-button').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            $('#product-modal').addClass('hidden');
+            
+            const itemId = $(this).data('id') || $(this).attr('data-id');
+            const currentBid = parseFloat($(this).data('current-bid') || $(this).attr('data-current-bid') || 0);
+            
+            console.log("Modal bid button clicked:", itemId, currentBid);
+            
+            if (!itemId) {
+                console.error("Missing product ID for bid");
+                alert("Error: Could not place bid - missing product ID");
+                return false;
+            }
+            
+            // Set bid amount and details
+            $('#bid-item-name').text($('#product-name').text());
+            $('#current-bid').text('$' + currentBid.toFixed(2));
+            $('#bid-amount').val((currentBid + 10).toFixed(2));
+            updateBidTotals(currentBid + 10);
+            
+            // Store the selected item ID directly on the confirm button
+            $('#confirm-bid').data('product-id', itemId);
+            $('#confirm-bid').attr('data-product-id', itemId); // For jQuery compatibility
+            
+            $('#bid-modal').removeClass('hidden');
+            return false;
+        });
+        
+        // Watchlist toggle in main view
+        $('.watchlist-toggle-btn').each(function() {
+            const btn = $(this);
+            const productId = btn.data('id');
+            
+            console.log("Checking watchlist status for product:", productId);
+            
+            // Check if this product is in watchlist
+            $.get('/api/watchlist/status?product_id=' + productId + '&product_type=normal', function(response) {
+                if (response.in_watchlist) {
+                    btn.find('i').removeClass('far').addClass('fas text-red-500');
+                }
+            });
+        });
+        
+        // Watchlist toggle in main list
+        $('.watchlist-toggle-btn').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const btn = $(this);
+            const productId = btn.data('id');
+            const productType = btn.data('type');
+            const icon = btn.find('i');
+            const isAdding = icon.hasClass('far');
+            
+            console.log("Watchlist toggle clicked:", productId, productType, isAdding ? "add" : "remove");
+            
+            $.ajax({
+                url: '/api/watchlist',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    product_id: productId,
+                    product_type: productType,
+                    action: isAdding ? 'add' : 'remove'
+                }),
+                success: function(response) {
+                    console.log("Watchlist API response:", response);
+                    if (response.success) {
+                        if (isAdding) {
+                            icon.removeClass('far').addClass('fas text-red-500');
+                        } else {
+                            icon.removeClass('fas text-red-500').addClass('far');
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    console.error("Watchlist API error:", xhr.responseJSON);
+                    alert("Error updating watchlist");
+                }
+            });
+            
+            return false;
+        });
+        
+        // Watchlist toggle in modal
+        $('.watchlist-button').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const btn = $(this);
+            const productId = btn.data('id');
+            const productType = btn.data('type');
+            const icon = btn.find('i');
+            const isAdding = icon.hasClass('far');
+            
+            console.log("Modal watchlist button clicked:", productId, productType, isAdding ? "add" : "remove");
+            
+            $.ajax({
+                url: '/api/watchlist',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    product_id: productId,
+                    product_type: productType,
+                    action: isAdding ? 'add' : 'remove'
+                }),
+                success: function(response) {
+                    console.log("Watchlist API response:", response);
+                    if (response.success) {
+                        if (isAdding) {
+                            icon.removeClass('far').addClass('fas text-red-500');
+                            btn.find('span').text(' Watching');
+                            
+                            // Also update the card button if it exists
+                            $('.watchlist-toggle-btn[data-id="' + productId + '"]')
+                                .find('i')
+                                .removeClass('far')
+                                .addClass('fas text-red-500');
+                        } else {
+                            icon.removeClass('fas text-red-500').addClass('far');
+                            btn.find('span').text(' Watch');
+                            
+                            // Also update the card button if it exists
+                            $('.watchlist-toggle-btn[data-id="' + productId + '"]')
+                                .find('i')
+                                .removeClass('fas text-red-500')
+                                .addClass('far');
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    console.error("Modal watchlist API error:", xhr.responseJSON);
+                    alert("Error updating watchlist");
+                }
+            });
+            
+            return false;
+        });
+    });
+</script>
+{% endblock %} 

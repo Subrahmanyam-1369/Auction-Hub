@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AuctionHub - Online Auction Platform{% endblock %}</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left: 4px solid #fff;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen">
+    {% block header %}
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="/" class="flex items-center space-x-2">
+                <i class="fas fa-gavel text-indigo-600 text-2xl"></i>
+                <span class="text-xl font-bold text-gray-800">AuctionHub</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                {% if 'user' in session %}
+                    {% if session['role'] == 'admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="text-gray-600 hover:text-indigo-600">
+                            <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('user_dashboard') }}" class="text-gray-600 hover:text-indigo-600">
+                            <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+                        </a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-all">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-indigo-600">
+                        <i class="fas fa-sign-in-alt mr-1"></i> Login
+                    </a>
+                    <a href="{{ url_for('register') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-all">
+                        <i class="fas fa-user-plus mr-1"></i> Register
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+    {% endblock %}
+
+    <div class="container mx-auto px-4 py-8">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+                    <ul>
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block footer %}
+    <footer class="bg-gray-800 text-white mt-16 py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">About AuctionHub</h3>
+                    <p class="text-gray-400">AuctionHub is a modern online auction platform where you can bid on items or list your own products for auction.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/" class="hover:text-white transition-all">Home</a></li>
+                        <li><a href="/auctions" class="hover:text-white transition-all">Auctions</a></li>
+                        <li><a href="/login" class="hover:text-white transition-all">Login</a></li>
+                        <li><a href="/register" class="hover:text-white transition-all">Register</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><i class="fas fa-envelope mr-2"></i> support@auctionhub.com</li>
+                        <li><i class="fas fa-phone mr-2"></i> +1 (555) 123-4567</li>
+                        <li><i class="fas fa-map-marker-alt mr-2"></i> 123 Auction St, City, Country</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Follow Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-all"><i class="fab fa-facebook-f text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-all"><i class="fab fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-all"><i class="fab fa-instagram text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-all"><i class="fab fa-linkedin-in text-xl"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+                <p>&copy; 2023 AuctionHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Custom scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 
