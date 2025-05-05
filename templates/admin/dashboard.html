@@ -1,0 +1,282 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Admin Dashboard - AuctionHub{% endblock %}
+
+{% block sidebar_items %}
+<li>
+    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-item active flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-home mr-3 text-lg"></i>
+        <span>Home</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_auctions') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-gavel mr-3 text-lg"></i>
+        <span>Auctions</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_products', type='mortgage') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-home mr-3 text-lg"></i>
+        <span>Mortgage Products</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_products', type='normal') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-box mr-3 text-lg"></i>
+        <span>Normal Products</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('logout') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-sign-out-alt mr-3 text-lg"></i>
+        <span>Logout</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Welcome, {{ name }}!</h1>
+    <p class="text-gray-600">Admin Dashboard Overview</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Stats Card 1 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-box text-indigo-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Total Products</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ total_products }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Card 2 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-gavel text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Active Auctions</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ active_auctions }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Card 3 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-users text-purple-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Total Users</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ total_users }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <a href="{{ url_for('admin_products', type='normal') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-200 transition-all">
+            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                <i class="fas fa-plus text-indigo-600"></i>
+            </div>
+            <span class="font-medium text-gray-700">Add Normal Product</span>
+        </a>
+        <a href="{{ url_for('admin_products', type='mortgage') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-200 transition-all">
+            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                <i class="fas fa-home text-indigo-600"></i>
+            </div>
+            <span class="font-medium text-gray-700">Add Mortgage Product</span>
+        </a>
+        <a href="{{ url_for('admin_users') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-200 transition-all">
+            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                <i class="fas fa-user-plus text-indigo-600"></i>
+            </div>
+            <span class="font-medium text-gray-700">Manage Users</span>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="bg-white rounded-xl shadow-sm mb-8">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="font-bold text-gray-800">Recent Activity</h2>
+        <a href="{{ url_for('admin_activity') }}" class="text-sm text-indigo-600 hover:text-indigo-800">View All</a>
+    </div>
+    <div class="p-6">
+        <div class="space-y-4">
+            {# Recent user registrations #}
+            {% for user in recent_users %}
+            <div class="flex items-start">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <i class="fas fa-user-plus text-blue-600"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800">New user <span class="font-semibold">{{ user.name }}</span> registered.</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ user.created_at }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            {# Recent auctions ended #}
+            {% for auction in recent_auctions %}
+            <div class="flex items-start">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <i class="fas fa-gavel text-green-600"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800">Auction for <span class="font-semibold">{{ auction.name }}</span> has ended with a winning bid of <span class="font-semibold">${{ auction.current_bid }}</span>.</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ auction.end_date }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            {# Recent premium upgrades #}
+            {% for user in recent_premium_upgrades %}
+            <div class="flex items-start">
+                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <i class="fas fa-credit-card text-purple-600"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800">User <span class="font-semibold">{{ user.name }}</span> upgraded to Premium membership.</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ user.created_at }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Products -->
+<div class="bg-white rounded-xl shadow-sm mb-8">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="font-bold text-gray-800">Recent Products</h2>
+        <a href="{{ url_for('admin_auctions') }}" class="text-sm text-indigo-600 hover:text-indigo-800">View All</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Product
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Starting Price
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Current Bid
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        End Date
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for product in recent_products %}
+                <tr class="product-row" data-end-date="{{ product.end_date }}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 flex-shrink-0">
+                                {% if product.image and ',' in product.image %}
+                                    {% set first_image = product.image.split(',')[0].strip() %}
+                                    <img class="h-10 w-10 rounded-full object-cover" src="{{ url_for('static', filename='images/' + first_image) }}" alt="{{ product.name }}">
+                                {% else %}
+                                    <img class="h-10 w-10 rounded-full object-cover" src="{{ url_for('static', filename='images/' + (product.image or 'default.jpg')) }}" alt="{{ product.name }}">
+                                {% endif %}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ product.name }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    ID: #{{ product.id }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if product.type == 'normal' %}
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">Normal</span>
+                        {% else %}
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Mortgage</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${{ product.starting_price }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${{ product.current_bid }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ product.end_date }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="product-status px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                            <!-- Status will be set by JavaScript -->
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{{ url_for('admin_view_product', id=product.id, type=product.type) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
+                        <a href="{{ url_for('edit_product', id=product.id) }}" class="text-green-600 hover:text-green-900 mr-3">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if recent_products|length == 0 %}
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No recent products found.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Function to check if auction has ended
+        function hasAuctionEnded(endDateStr) {
+            const endDate = new Date(endDateStr);
+            const now = new Date();
+            return now > endDate;
+        }
+        
+        // Set initial status for all products in the recent products table
+        $('.product-row').each(function() {
+            const endDateStr = $(this).attr('data-end-date');
+            const isEnded = hasAuctionEnded(endDateStr);
+            
+            const statusElement = $(this).find('.product-status');
+            
+            if (isEnded) {
+                statusElement.text('Ended');
+                statusElement.addClass('bg-red-100 text-red-800');
+            } else {
+                statusElement.text('Active');
+                statusElement.addClass('bg-green-100 text-green-800');
+            }
+        });
+    });
+</script>
+{% endblock %} 

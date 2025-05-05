@@ -1,0 +1,56 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Recent Activity - AuctionHub{% endblock %}
+{% block sidebar_items %}
+<li><a href="{{ url_for('admin_dashboard') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg"><i class="fas fa-home mr-3 text-lg"></i><span>Home</span></a></li>
+<li><a href="{{ url_for('admin_auctions') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg"><i class="fas fa-gavel mr-3 text-lg"></i><span>Auctions</span></a></li>
+<li><a href="{{ url_for('admin_products', type='mortgage') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg"><i class="fas fa-home mr-3 text-lg"></i><span>Mortgage Products</span></a></li>
+<li><a href="{{ url_for('admin_products', type='normal') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg"><i class="fas fa-box mr-3 text-lg"></i><span>Normal Products</span></a></li>
+<li><a href="{{ url_for('logout') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg"><i class="fas fa-sign-out-alt mr-3 text-lg"></i><span>Logout</span></a></li>
+{% endblock %}
+{% block dashboard_content %}
+<div class="mb-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">Recent Activity</h1>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="font-bold text-gray-800 mb-4">Recent Bids</h2>
+        <ul class="space-y-2">
+            {% for bid in recent_bids %}
+            <li class="border-b pb-2">
+                <span class="font-semibold">{{ bid.user }}</span> placed a bid of <span class="font-semibold">${{ bid.amount }}</span> on <span class="font-semibold">{{ bid.product }}</span> ({{ bid.type|capitalize }}) at {{ bid.bid_time }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="font-bold text-gray-800 mb-4">Recent Users</h2>
+        <ul class="space-y-2">
+            {% for user in recent_users %}
+            <li class="border-b pb-2">
+                <span class="font-semibold">{{ user.name }}</span> ({{ user.email }}) registered at {{ user.created_at }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="font-bold text-gray-800 mb-4">Recent Premium Upgrades</h2>
+        <ul class="space-y-2">
+            {% for user in recent_premium_upgrades %}
+            <li class="border-b pb-2">
+                <span class="font-semibold">{{ user.name }}</span> ({{ user.email }}) upgraded to Premium at {{ user.created_at }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="font-bold text-gray-800 mb-4">Recent Ended Auctions</h2>
+        <ul class="space-y-2">
+            {% for auction in recent_auctions %}
+            <li class="border-b pb-2">
+                Auction for <span class="font-semibold">{{ auction.name }}</span> ended at {{ auction.end_date }} with winning bid <span class="font-semibold">${{ auction.current_bid }}</span> ({{ auction.type|capitalize }})
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %} 

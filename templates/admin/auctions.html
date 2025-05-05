@@ -1,0 +1,469 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Admin - Auctions - AuctionHub{% endblock %}
+
+{% block sidebar_items %}
+<li>
+    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-home mr-3 text-lg"></i>
+        <span>Home</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_auctions') }}" class="sidebar-item active flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-gavel mr-3 text-lg"></i>
+        <span>Auctions</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_products', type='mortgage') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-home mr-3 text-lg"></i>
+        <span>Mortgage Products</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_products', type='normal') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-box mr-3 text-lg"></i>
+        <span>Normal Products</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('logout') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-sign-out-alt mr-3 text-lg"></i>
+        <span>Logout</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">All Auctions</h1>
+        <p class="text-gray-600">View and manage all auctions</p>
+    </div>
+    <div class="flex space-x-3">
+        <a href="{{ url_for('add_product', type='normal') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-all">
+            <i class="fas fa-plus mr-2"></i> Add Normal Product
+        </a>
+        <a href="{{ url_for('add_product', type='mortgage') }}" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-all">
+            <i class="fas fa-plus mr-2"></i> Add Mortgage Product
+        </a>
+    </div>
+</div>
+
+<!-- Auction Type Tabs -->
+<div class="bg-white rounded-xl shadow-sm mb-6">
+    <div class="flex border-b">
+        <button id="all-tab" class="px-6 py-3 text-indigo-600 border-b-2 border-indigo-600 font-medium text-sm">
+            All Auctions
+        </button>
+        <button id="normal-tab" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium text-sm">
+            Normal Auctions
+        </button>
+        <button id="mortgage-tab" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium text-sm">
+            Mortgage Auctions
+        </button>
+    </div>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+        <div class="flex-1">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="search" placeholder="Search auctions..." 
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+        </div>
+        <div class="w-full md:w-1/4">
+            <select id="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="ended">Ended</option>
+            </select>
+        </div>
+        <div class="w-full md:w-1/4">
+            <select id="sort" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="newest">Newest</option>
+                <option value="ending-soon">Ending Soon</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Auction Cards -->
+<div id="all-auctions">
+    <!-- Mortgage Auctions Section -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Mortgage Auctions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for product in products %}
+            {% if product.type == 'mortgage' %}
+            <div class="auction-card bg-white rounded-xl shadow-sm overflow-hidden" data-end-date="{{ product.end_date }}" data-type="mortgage" data-status="">
+                <div class="relative">
+                    {% if product.image and ',' in product.image %}
+                        {% set first_image = product.image.split(',')[0].strip() %}
+                        <img src="{{ url_for('static', filename='images/' + first_image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                    {% endif %}
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-green-600 text-white text-xs font-medium px-2.5 py-1 rounded">Mortgage</span>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">{{ product.name }}</h3>
+                    <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ product.description }}</p>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <span class="text-xs text-gray-500">Starting Price</span>
+                            <p class="font-semibold text-gray-800">${{ product.starting_price }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500">Current Bid</span>
+                            <p class="font-semibold text-indigo-600">${{ product.current_bid }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <span class="text-xs text-gray-500">End Date</span>
+                            <p class="text-sm text-gray-800">{{ product.end_date }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500">Status</span>
+                            <p>
+                                <span class="auction-status bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                    <!-- Status will be set by JavaScript -->
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <a href="{{ url_for('edit_product', id=product.id) }}" class="text-indigo-600 hover:text-indigo-800">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                        <a href="{{ url_for('delete_product', id=product.id) }}" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            
+            {% set mortgage_count = products|selectattr('type', 'equalto', 'mortgage')|list|length %}
+            {% if mortgage_count == 0 %}
+            <div class="col-span-3 bg-gray-50 rounded-xl p-6 text-center">
+                <div class="text-gray-500 mb-3">No mortgage auctions found</div>
+                <a href="{{ url_for('add_product', type='mortgage') }}" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-all">
+                    <i class="fas fa-plus mr-2"></i> Add Mortgage Product
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Normal Auctions Section -->
+    <div>
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Normal Auctions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for product in products %}
+            {% if product.type == 'normal' %}
+            <div class="auction-card bg-white rounded-xl shadow-sm overflow-hidden" data-end-date="{{ product.end_date }}" data-type="normal" data-status="">
+                <div class="relative">
+                    {% if product.image and ',' in product.image %}
+                        {% set first_image = product.image.split(',')[0].strip() %}
+                        <img src="{{ url_for('static', filename='images/' + first_image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                    {% endif %}
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded">Normal</span>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">{{ product.name }}</h3>
+                    <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ product.description }}</p>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <span class="text-xs text-gray-500">Starting Price</span>
+                            <p class="font-semibold text-gray-800">${{ product.starting_price }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500">Current Bid</span>
+                            <p class="font-semibold text-indigo-600">${{ product.current_bid }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <span class="text-xs text-gray-500">End Date</span>
+                            <p class="text-sm text-gray-800">{{ product.end_date }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500">Status</span>
+                            <p>
+                                <span class="auction-status bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                    <!-- Status will be set by JavaScript -->
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <a href="{{ url_for('edit_product', id=product.id) }}" class="text-indigo-600 hover:text-indigo-800">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                        <a href="{{ url_for('delete_product', id=product.id) }}" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            
+            {% set normal_count = products|selectattr('type', 'equalto', 'normal')|list|length %}
+            {% if normal_count == 0 %}
+            <div class="col-span-3 bg-gray-50 rounded-xl p-6 text-center">
+                <div class="text-gray-500 mb-3">No normal auctions found</div>
+                <a href="{{ url_for('add_product', type='normal') }}" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-all">
+                    <i class="fas fa-plus mr-2"></i> Add Normal Product
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filter views (hidden by default) -->
+<div id="normal-auctions" class="hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for product in products %}
+        {% if product.type == 'normal' %}
+        <div class="auction-card bg-white rounded-xl shadow-sm overflow-hidden" data-end-date="{{ product.end_date }}" data-type="normal" data-status="">
+            <div class="relative">
+                {% if product.image and ',' in product.image %}
+                    {% set first_image = product.image.split(',')[0].strip() %}
+                    <img src="{{ url_for('static', filename='images/' + first_image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                {% endif %}
+                <div class="absolute top-3 left-3">
+                    <span class="bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded">Normal</span>
+                </div>
+            </div>
+            <div class="p-5">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">{{ product.name }}</h3>
+                <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ product.description }}</p>
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <span class="text-xs text-gray-500">Starting Price</span>
+                        <p class="font-semibold text-gray-800">${{ product.starting_price }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-500">Current Bid</span>
+                        <p class="font-semibold text-indigo-600">${{ product.current_bid }}</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <span class="text-xs text-gray-500">End Date</span>
+                        <p class="text-sm text-gray-800">{{ product.end_date }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-500">Status</span>
+                        <p>
+                            <span class="auction-status bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                <!-- Status will be set by JavaScript -->
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between">
+                    <a href="{{ url_for('edit_product', id=product.id) }}" class="text-indigo-600 hover:text-indigo-800">
+                        <i class="fas fa-edit mr-1"></i> Edit
+                    </a>
+                    <a href="{{ url_for('delete_product', id=product.id) }}" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash mr-1"></i> Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        
+        {% set normal_count = products|selectattr('type', 'equalto', 'normal')|list|length %}
+        {% if normal_count == 0 %}
+        <div class="col-span-3 bg-gray-50 rounded-xl p-6 text-center">
+            <div class="text-gray-500 mb-3">No normal auctions found</div>
+            <a href="{{ url_for('add_product', type='normal') }}" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-all">
+                <i class="fas fa-plus mr-2"></i> Add Normal Product
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="mortgage-auctions" class="hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for product in products %}
+        {% if product.type == 'mortgage' %}
+        <div class="auction-card bg-white rounded-xl shadow-sm overflow-hidden" data-end-date="{{ product.end_date }}" data-type="mortgage" data-status="">
+            <div class="relative">
+                {% if product.image and ',' in product.image %}
+                    {% set first_image = product.image.split(',')[0].strip() %}
+                    <img src="{{ url_for('static', filename='images/' + first_image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                {% endif %}
+                <div class="absolute top-3 left-3">
+                    <span class="bg-green-600 text-white text-xs font-medium px-2.5 py-1 rounded">Mortgage</span>
+                </div>
+            </div>
+            <div class="p-5">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">{{ product.name }}</h3>
+                <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ product.description }}</p>
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <span class="text-xs text-gray-500">Starting Price</span>
+                        <p class="font-semibold text-gray-800">${{ product.starting_price }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-500">Current Bid</span>
+                        <p class="font-semibold text-indigo-600">${{ product.current_bid }}</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <span class="text-xs text-gray-500">End Date</span>
+                        <p class="text-sm text-gray-800">{{ product.end_date }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-500">Status</span>
+                        <p>
+                            <span class="auction-status bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                <!-- Status will be set by JavaScript -->
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between">
+                    <a href="{{ url_for('edit_product', id=product.id) }}" class="text-indigo-600 hover:text-indigo-800">
+                        <i class="fas fa-edit mr-1"></i> Edit
+                    </a>
+                    <a href="{{ url_for('delete_product', id=product.id) }}" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash mr-1"></i> Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        
+        {% set mortgage_count = products|selectattr('type', 'equalto', 'mortgage')|list|length %}
+        {% if mortgage_count == 0 %}
+        <div class="col-span-3 bg-gray-50 rounded-xl p-6 text-center">
+            <div class="text-gray-500 mb-3">No mortgage auctions found</div>
+            <a href="{{ url_for('add_product', type='mortgage') }}" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-all">
+                <i class="fas fa-plus mr-2"></i> Add Mortgage Product
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Function to check if auction has ended
+        function hasAuctionEnded(endDateStr) {
+            const endDate = new Date(endDateStr);
+            const now = new Date();
+            return now > endDate;
+        }
+        
+        // Set initial status for all auctions
+        $('.auction-card').each(function() {
+            const endDateStr = $(this).attr('data-end-date');
+            const isEnded = hasAuctionEnded(endDateStr);
+            
+            const statusElement = $(this).find('.auction-status');
+            
+            if (isEnded) {
+                statusElement.text('Ended');
+                statusElement.removeClass('bg-green-100 text-green-800').addClass('bg-red-100 text-red-800');
+                $(this).attr('data-status', 'ended');
+            } else {
+                statusElement.text('Active');
+                statusElement.removeClass('bg-red-100 text-red-800').addClass('bg-green-100 text-green-800');
+                $(this).attr('data-status', 'active');
+            }
+        });
+        
+        // Tab switching logic
+        $('#all-tab').click(function() {
+            $(this).addClass('text-indigo-600 border-b-2 border-indigo-600').removeClass('text-gray-500');
+            $('#normal-tab, #mortgage-tab').removeClass('text-indigo-600 border-b-2 border-indigo-600').addClass('text-gray-500');
+            $('#all-auctions').removeClass('hidden');
+            $('#normal-auctions, #mortgage-auctions').addClass('hidden');
+        });
+        
+        $('#normal-tab').click(function() {
+            $(this).addClass('text-indigo-600 border-b-2 border-indigo-600').removeClass('text-gray-500');
+            $('#all-tab, #mortgage-tab').removeClass('text-indigo-600 border-b-2 border-indigo-600').addClass('text-gray-500');
+            $('#normal-auctions').removeClass('hidden');
+            $('#all-auctions, #mortgage-auctions').addClass('hidden');
+        });
+        
+        $('#mortgage-tab').click(function() {
+            $(this).addClass('text-indigo-600 border-b-2 border-indigo-600').removeClass('text-gray-500');
+            $('#all-tab, #normal-tab').removeClass('text-indigo-600 border-b-2 border-indigo-600').addClass('text-gray-500');
+            $('#mortgage-auctions').removeClass('hidden');
+            $('#all-auctions, #normal-auctions').addClass('hidden');
+        });
+        
+        // Status filter
+        $('#status').change(function() {
+            const selectedStatus = $(this).val();
+            
+            if (selectedStatus === '') {
+                // Show all auctions
+                $('.auction-card').show();
+            } else {
+                // Show only auctions with matching status
+                $('.auction-card').each(function() {
+                    const cardStatus = $(this).attr('data-status');
+                    $(this).toggle(cardStatus === selectedStatus);
+                });
+            }
+        });
+        
+        // Search functionality
+        $('#search').on('keyup', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            
+            $('.auction-card').each(function() {
+                const cardText = $(this).text().toLowerCase();
+                $(this).toggle(cardText.includes(searchTerm));
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 
