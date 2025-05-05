@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuctionHub - Your Premier Online Auction Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        /* Custom styles for better hero */
+        .hero-bg {
+            /* Placeholder background - REPLACE with high-quality auction-relevant image */
+            background-image: url('https://picsum.photos/seed/auctionhero/1600/900');
+            background-size: cover;
+            background-position: center;
+        }
+        .hero-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        /* Style for featured auction image fallback */
+        .featured-img-fallback {
+            background-color: #e2e8f0; /* gray-200 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8; /* gray-400 */
+        }
+        .featured-img-fallback i {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-2xl font-bold text-indigo-600 flex items-center">
+                <i class="fas fa-gavel mr-2"></i> AuctionHub
+            </a>
+            <div class="space-x-4">
+                <a href="{{ url_for('user_auctions') }}" class="text-gray-600 hover:text-indigo-600">Auctions</a>
+                <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-indigo-600">Login</a>
+                <a href="{{ url_for('register') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-all text-sm">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-bg text-white">
+        <div class="hero-overlay">
+            <div class="container mx-auto px-6 py-32 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">Find Your Next Treasure</h1>
+                <p class="text-lg md:text-xl mb-8 text-gray-300">Bid on exclusive items from collectibles to electronics, all in one place.</p>
+                <div class="space-x-4">
+                    <a href="{{ url_for('register') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg transition-all text-lg">Get Started</a>
+                    <a href="{{ url_for('user_auctions') }}" class="bg-white hover:bg-gray-200 text-indigo-600 font-bold py-3 px-8 rounded-lg transition-all text-lg\">Browse Auctions</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">How It Works</h2>
+            <p class="text-gray-600 mb-12">Start bidding in just a few simple steps.</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="flex flex-col items-center">
+                    <div class="bg-indigo-100 text-indigo-600 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                        <i class="fas fa-user-plus text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2\">1. Register</h3>
+                    <p class="text-gray-600\">Create your free account quickly and easily.</p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="bg-indigo-100 text-indigo-600 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                        <i class="fas fa-search text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2\">2. Browse</h3>
+                    <p class="text-gray-600\">Explore thousands of items up for auction.</p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="bg-indigo-100 text-indigo-600 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                        <i class="fas fa-hand-paper text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2\">3. Bid</h3>
+                    <p class="text-gray-600\">Place your bid and track the competition.</p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="bg-indigo-100 text-indigo-600 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                        <i class="fas fa-trophy text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2\">4. Win</h3>
+                    <p class="text-gray-600\">Secure your item if you're the highest bidder!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Auctions Section -->
+    <section class="py-16 bg-gray-100">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-gray-800 mb-12 text-center\">Featured Auctions</h2>
+            {% if featured_auctions %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for auction in featured_auctions %}
+                <div class="bg-white rounded-xl shadow-md overflow-hidden transition-transform transform hover:-translate-y-1">
+                    <a href="{{ url_for('user_auctions') }}" class="block">
+                        <div class="relative w-full h-48">
+                            {# Use actual image if available, otherwise use Picsum placeholder #}
+                            {% if auction.main_image and auction.main_image != 'placeholder.jpg' %}
+                                <img src="{{ url_for('static', filename='uploads/' + auction.main_image) }}"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                     alt="{{ auction.name }}" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 featured-img-fallback" style="display: none;">
+                                    <i class="fas fa-image"></i> <!-- Fallback Icon -->
+                                </div>
+                             {% else %}
+                                <div class="w-full h-full featured-img-fallback">
+                                     <i class="fas fa-image"></i> <!-- Placeholder Icon -->
+                                </div>
+                            {% endif %}
+                            <div class="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">
+                                Featured
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate" title="{{ auction.name }}">{{ auction.name }}</h3>
+                            <div class="flex justify-between items-center text-sm mb-3">
+                                <div>
+                                    <p class="text-gray-500\">Current Bid:</p>
+                                    <p class="text-indigo-600 font-bold\">${{ "%.2f"|format(auction.current_bid or auction.starting_price) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500\">Ends in:</p>
+                                    <p class="text-red-600 font-bold\">{{ auction.time_left }}</p>
+                                </div>
+                            </div>
+                            <span class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2 rounded-lg transition-all text-sm">
+                                View Auction
+                            </span>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-12">
+                <a href="{{ url_for('user_auctions') }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-lg">
+                    View All Auctions <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+            {% else %}
+            <p class="text-center text-gray-600\">No featured auctions available right now. Check back soon!</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-12">Explore Categories</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Static Example Categories - Replace with dynamic data if needed -->
+                <a href="{{ url_for('user_auctions') }}" class="block bg-gray-100 p-6 rounded-lg hover:bg-indigo-100 transition-colors group">
+                    <i class="fas fa-gem text-4xl text-indigo-500 mb-4 group-hover:text-indigo-700\"></i>
+                    <h3 class="text-xl font-semibold text-gray-800\">Collectibles</h3>
+                </a>
+                <a href="{{ url_for('user_auctions') }}" class="block bg-gray-100 p-6 rounded-lg hover:bg-indigo-100 transition-colors group">
+                    <i class="fas fa-tv text-4xl text-indigo-500 mb-4 group-hover:text-indigo-700\"></i>
+                    <h3 class="text-xl font-semibold text-gray-800\">Electronics</h3>
+                </a>
+                <a href="{{ url_for('user_auctions') }}" class="block bg-gray-100 p-6 rounded-lg hover:bg-indigo-100 transition-colors group">
+                    <i class="fas fa-car text-4xl text-indigo-500 mb-4 group-hover:text-indigo-700\"></i>
+                    <h3 class="text-xl font-semibold text-gray-800\">Vehicles</h3>
+                </a>
+                <a href="{{ url_for('user_auctions') }}" class="block bg-gray-100 p-6 rounded-lg hover:bg-indigo-100 transition-colors group">
+                    <i class="fas fa-palette text-4xl text-indigo-500 mb-4 group-hover:text-indigo-700\"></i>
+                    <h3 class="text-xl font-semibold text-gray-800\">Art & Antiques</h3>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="py-20 bg-indigo-700 text-white">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-4\">Ready to Find Your Next Deal?</h2>
+            <p class="text-indigo-200 mb-8 text-lg">Join thousands of bidders and start exploring unique auctions today.</p>
+            <a href="{{ url_for('register') }}" class="bg-white hover:bg-gray-200 text-indigo-700 font-bold py-3 px-8 rounded-lg transition-all text-lg\">Register for Free</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-4\">AuctionHub</h3>
+                    <p class="text-sm">Your premier destination for online auctions. Discover rare finds and bid with confidence.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{{ url_for('user_auctions') }}" class="hover:text-white">Auctions</a></li>
+                        <li><a href="{{ url_for('register') }}" class="hover:text-white">Register</a></li>
+                        <li><a href="{{ url_for('login') }}" class="hover:text-white">Login</a></li>
+                        <li><a href=\"#\" class=\"hover:text-white\">About Us</a></li> {# Add link if page exists #}
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Support</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href=\"#\" class=\"hover:text-white\">Help Center</a></li> {# Add link if page exists #}
+                        <li><a href=\"#\" class=\"hover:text-white\">Contact Us</a></li> {# Add link if page exists #}
+                        <li><a href=\"#\" class=\"hover:text-white\">Terms of Service</a></li> {# Add link if page exists #}
+                        <li><a href=\"#\" class=\"hover:text-white\">Privacy Policy</a></li> {# Add link if page exists #}
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Connect With Us</h4>
+                    <div class="flex space-x-4">
+                        <a href=\"#\" class=\"text-gray-400 hover:text-white\"><i class="fab fa-facebook-f text-xl"></i></a>
+                        <a href=\"#\" class=\"text-gray-400 hover:text-white\"><i class="fab fa-twitter text-xl"></i></a>
+                        <a href=\"#\" class=\"text-gray-400 hover:text-white\"><i class="fab fa-instagram text-xl"></i></a>
+                        <a href=\"#\" class=\"text-gray-400 hover:text-white\"><i class="fab fa-linkedin-in text-xl"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
+                &copy; {% set current_year = namespace(value=2025) %}{{ current_year.value }} AuctionHub. All rights reserved. 
+                <script>document.write(new Date().getFullYear());</script> {# Update year dynamically #}
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

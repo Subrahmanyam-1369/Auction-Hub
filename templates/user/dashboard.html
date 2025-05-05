@@ -1,0 +1,284 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}User Dashboard - AuctionHub{% endblock %}
+
+{% block sidebar_items %}
+<li>
+    <a href="{{ url_for('user_dashboard') }}" class="sidebar-item active flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-home mr-3 text-lg"></i>
+        <span>Home</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_auctions') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-gavel mr-3 text-lg"></i>
+        <span>Auctions</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_bids') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-hand-paper mr-3 text-lg"></i>
+        <span>Your Bids</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_profile') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-user mr-3 text-lg"></i>
+        <span>View Profile</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('update_profile') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-user-edit mr-3 text-lg"></i>
+        <span>Update Profile</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('logout') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-sign-out-alt mr-3 text-lg"></i>
+        <span>Logout</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Welcome, {{ name }}!</h1>
+    <p class="text-gray-600">Here's an overview of your auction activity</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Stats Card 1 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-gavel text-indigo-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Active Bids</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ active_bids_count }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Card 2 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-trophy text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Auctions Won</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ auctions_won_count }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Card 3 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-eye text-purple-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Watchlist</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ watchlist_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="bg-white rounded-xl shadow-sm mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="font-bold text-gray-800">Recent Activity</h2>
+    </div>
+    <div class="p-6">
+        <div class="space-y-4">
+            {% if recent_activity %}
+                {% for activity in recent_activity %}
+                    <!-- Activity Item -->
+                    <div class="flex items-start">
+                        {% if activity.activity_type == 'bid' %}
+                            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-gavel text-yellow-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-800">You placed a bid of <span class="font-semibold">${{ "%.2f"|format(activity.amount) }}</span> on <a href="#" class="text-indigo-600 hover:underline">{{ activity.product_name }}</a>.</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ activity.time }}</p>
+                            </div>
+                        {% elif activity.activity_type == 'won' %}
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-trophy text-green-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-800">You won the auction for <a href="#" class="text-indigo-600 hover:underline">{{ activity.product_name }}</a> with a bid of <span class="font-semibold">${{ "%.2f"|format(activity.amount) }}</span>.</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ activity.time }}</p>
+                            </div>
+                        {% elif activity.activity_type == 'watch' %}
+                            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-eye text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-800">You added <a href="#" class="text-indigo-600 hover:underline">{{ activity.product_name }}</a> to your watchlist.</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ activity.time }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-gray-500 py-4">
+                    <p>No recent activity</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- New Arrivals -->
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">New Arrivals</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% if new_arrivals %}
+            {% for product in new_arrivals %}
+                <!-- Auction Card -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="relative">
+                        {% if product.image %}
+                            {% set image_list = product.image.split(',') %}
+                            <img src="{{ url_for('static', filename='uploads/' + image_list[0]) }}" alt="{{ product.name }}" class="w-full h-40 object-cover">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="{{ product.name }}" class="w-full h-40 object-cover">
+                        {% endif %}
+                        <div class="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">
+                            <i class="fas fa-bolt mr-1"></i> New
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">{{ product.name }}</h3>
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-1">{{ product.description }}</p>
+                        <div class="flex justify-between items-center mb-3">
+                            <div>
+                                <p class="text-gray-500 text-xs">Current Bid</p>
+                                <p class="text-indigo-600 font-bold">${{ "%.2f"|format(product.current_bid or product.starting_price) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-xs">Ends in</p>
+                                <p class="text-indigo-600 font-bold" data-end-date="{{ product.end_date }}">
+                                    <span class="countdown-timer">Loading...</span>
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('user_auctions') }}" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2 rounded-lg transition-all text-sm">
+                            View Auction
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-3 text-center text-gray-500 py-8">
+                <p>No new arrivals at the moment. Check back soon!</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('user_auctions') }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
+            View All Auctions <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+</div>
+
+<!-- Mortgage Auctions -->
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">Mortgage Auctions</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% if mortgage_auctions %}
+            {% for product in mortgage_auctions %}
+                <!-- Mortgage Auction Card -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="relative">
+                        {% if product.image %}
+                            {% set image_list = product.image.split(',') %}
+                            <img src="{{ url_for('static', filename='uploads/' + image_list[0]) }}" alt="{{ product.name }}" class="w-full h-40 object-cover">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/apartment.jpg') }}" alt="{{ product.name }}" class="w-full h-40 object-cover">
+                        {% endif %}
+                        <div class="absolute top-2 right-2 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded">
+                            <i class="fas fa-home mr-1"></i> Mortgage
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">{{ product.name }}</h3>
+                        <p class="text-gray-600 text-sm mb-2">{{ product.property_address }}</p>
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-1">{{ product.description }}</p>
+                        <div class="flex justify-between items-center mb-3">
+                            <div>
+                                <p class="text-gray-500 text-xs">Current Bid</p>
+                                <p class="text-indigo-600 font-bold">${{ "%.2f"|format(product.current_bid or product.starting_price) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-xs">Ends in</p>
+                                <p class="text-indigo-600 font-bold" data-end-date="{{ product.end_date }}">
+                                    <span class="countdown-timer">Loading...</span>
+                                </p>
+                            </div>
+                        </div>
+                        <a href="#" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2 rounded-lg transition-all text-sm">
+                            Bid Now
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-3 text-center text-gray-500 py-8">
+                <p>No mortgage auctions available at the moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Subscription Banner -->
+<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white">
+    <div class="flex flex-col md:flex-row items-center justify-between">
+        <div>
+            <h3 class="text-xl font-bold mb-2">Unlock Mortgage Auctions!</h3>
+            <p class="text-white opacity-90">Subscribe to our premium plan to access exclusive property auctions.</p>
+        </div>
+        <a href="#" class="mt-4 md:mt-0 bg-white text-indigo-600 hover:bg-gray-100 py-2 px-6 rounded-lg font-medium transition-all">
+            Upgrade Now
+        </a>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Update countdown timers
+    function updateCountdowns() {
+        document.querySelectorAll('[data-end-date]').forEach(function(element) {
+            const endDate = new Date(element.getAttribute('data-end-date'));
+            const now = new Date();
+            const diff = endDate - now;
+            
+            if (diff <= 0) {
+                element.querySelector('.countdown-timer').textContent = 'Ended';
+                return;
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            element.querySelector('.countdown-timer').textContent = days + 'd ' + hours + 'h';
+        });
+    }
+    
+    // Initial update
+    updateCountdowns();
+    
+    // Update every minute
+    setInterval(updateCountdowns, 60000);
+</script>
+{% endblock %}
+{% endblock %} 

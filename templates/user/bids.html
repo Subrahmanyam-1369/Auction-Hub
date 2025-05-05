@@ -1,0 +1,468 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Your Bids - AuctionHub{% endblock %}
+
+{% block sidebar_items %}
+<li>
+    <a href="{{ url_for('user_dashboard') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-home mr-3 text-lg"></i>
+        <span>Home</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_auctions') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-gavel mr-3 text-lg"></i>
+        <span>Auctions</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_bids') }}" class="sidebar-item active flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-hand-paper mr-3 text-lg"></i>
+        <span>Your Bids</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('user_profile') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-user mr-3 text-lg"></i>
+        <span>View Profile</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('update_profile') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-user-edit mr-3 text-lg"></i>
+        <span>Update Profile</span>
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('logout') }}" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg">
+        <i class="fas fa-sign-out-alt mr-3 text-lg"></i>
+        <span>Logout</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Your Bids</h1>
+    <p class="text-gray-600">Track your bidding history and current status</p>
+</div>
+
+<!-- Bid Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Stat Card 1 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-gavel text-indigo-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Active Bids</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ active_bids_count }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stat Card 2 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-trophy text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Won Auctions</h3>
+                <p class="text-2xl font-bold text-gray-800">{{ won_auctions_count }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stat Card 3 -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-dollar-sign text-yellow-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Total Spent</h3>
+                <p class="text-2xl font-bold text-gray-800">${{ "%.2f"|format(total_spent) }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="mb-6 border-b border-gray-200">
+    <ul class="flex flex-wrap -mb-px bid-tabs">
+        <li class="mr-2">
+            <a href="#" data-status="all" class="tab-link inline-block py-4 px-4 text-indigo-600 border-b-2 border-indigo-600 font-medium text-sm active">
+                All Bids
+            </a>
+        </li>
+        <li class="mr-2">
+            <a href="#" data-status="active" class="tab-link inline-block py-4 px-4 text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent font-medium text-sm">
+                Active
+            </a>
+        </li>
+        <li class="mr-2">
+            <a href="#" data-status="won" class="tab-link inline-block py-4 px-4 text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent font-medium text-sm">
+                Won
+            </a>
+        </li>
+        <li class="mr-2">
+            <a href="#" data-status="lost" class="tab-link inline-block py-4 px-4 text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent font-medium text-sm">
+                Lost
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!-- Bids Table -->
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="font-bold text-gray-800">Bid History</h2>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Item
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Your Bid
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Current Bid
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200 bid-history-body">
+                {% for bid in bids %}
+                <tr data-status="{{ bid.bid_status|lower }}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 flex-shrink-0">
+                                <img class="h-10 w-10 rounded-full object-cover" src="{{ url_for('static', filename='images/' + bid.main_image) }}" alt="{{ bid.product_name }}">
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ bid.product_name }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    ID: #{{ bid.product_id }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 font-medium">${{ "%.2f"|format(bid.bid_amount) }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${{ "%.2f"|format(bid.current_bid or bid.starting_price) }}</div>
+                        {% if bid.bid_status == 'Winning' %}
+                            <div class="text-xs text-green-600">Highest Bid</div>
+                        {% elif bid.bid_status == 'Outbid' %}
+                            <div class="text-xs text-red-600">Outbid</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ bid.status_class }}">
+                            {{ bid.bid_status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{{ url_for('user_auctions', status='') }}#item-{{ bid.product_id }}" class="text-indigo-600 hover:text-indigo-900 mr-3 view-item" data-id="{{ bid.product_id }}" data-type="{{ bid.product_type }}">View</a>
+                        {% if bid.bid_status == 'Outbid' and bid.product_status == 'active' %}
+                            <a href="#" class="text-green-600 hover:text-green-900 bid-again" 
+                               data-id="{{ bid.product_id }}" 
+                               data-current-bid="{{ bid.current_bid or bid.starting_price }}" 
+                               data-name="{{ bid.product_name }}">Bid Again</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                
+                <!-- Fallback if no bids -->
+                {% if bids|length == 0 %}
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                        You haven't placed any bids yet. <a href="{{ url_for('user_auctions') }}" class="text-indigo-600 hover:text-indigo-900">Explore auctions</a> to start bidding.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if bids|length > 10 %}
+    <div class="px-6 py-4 border-t border-gray-200">
+        <nav class="flex items-center justify-between">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </a>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">20</span> bids
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a href="#" aria-current="page" class="z-10 bg-indigo-50 border-indigo-500 text-indigo-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                            1
+                        </a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                            2
+                        </a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                            3
+                        </a>
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Bid Modal -->
+<div id="bid-modal" class="hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Place a Bid</h3>
+                <button id="close-bid-modal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <h4 id="bid-item-name" class="text-lg font-medium text-gray-800 mb-1">Item Name</h4>
+                <div class="flex justify-between mb-3">
+                    <p class="text-gray-600 text-sm">Current Bid:</p>
+                    <p id="current-bid" class="text-indigo-600 font-bold">$0.00</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="bid-amount" class="block text-gray-700 text-sm font-medium mb-2">Your Bid</label>
+                    <input type="number" id="bid-amount" name="bid-amount" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Enter amount" step="0.01">
+                    <p id="bid-error" class="hidden mt-1 text-xs text-red-500">Your bid must be higher than the current bid.</p>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="flex justify-between mb-2">
+                        <p class="text-gray-600">Your Bid:</p>
+                        <p id="your-bid-display" class="font-medium">$0.00</p>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <p class="text-gray-500">Service Fee (5%):</p>
+                        <p id="service-fee" class="text-gray-500">$0.00</p>
+                    </div>
+                    <div class="flex justify-between font-bold mt-2">
+                        <p>Total:</p>
+                        <p id="total-amount">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button id="cancel-bid" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all">
+                    Cancel
+                </button>
+                <button id="confirm-bid" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-all" data-product-id="" data-type="normal">
+                    Place Bid
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    $(document).ready(function() {
+        // Tab filtering logic (existing)
+        const bidRows = $('.bid-history-body tr');
+        
+        $('.bid-tabs .tab-link').on('click', function(e) {
+            e.preventDefault();
+            const status = $(this).data('status');
+            
+            // Update active tab style
+            $('.bid-tabs .tab-link').removeClass('active text-indigo-600 border-indigo-600').addClass('text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent');
+            $(this).removeClass('text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent').addClass('active text-indigo-600 border-indigo-600');
+            
+            // Filter table rows
+            bidRows.each(function() {
+                const rowStatus = $(this).data('status');
+                if (status === 'all' || rowStatus === status) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+
+        // Function to update bid totals in the modal
+        function updateBidTotals(amount) {
+            amount = parseFloat(amount) || 0;
+            const serviceFee = amount * 0.05;
+            const total = amount + serviceFee;
+            
+            $('#your-bid-display').text('$' + amount.toFixed(2));
+            $('#service-fee').text('$' + serviceFee.toFixed(2));
+            $('#total-amount').text('$' + total.toFixed(2));
+            
+            // Validate bid
+            const currentBid = parseFloat($('#current-bid').text().replace('$', ''));
+            if (amount <= currentBid) {
+                $('#bid-error').text('Your bid must be higher than the current bid ($' + currentBid.toFixed(2) + ')').removeClass('hidden');
+                $('#confirm-bid').prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+            } else {
+                $('#bid-error').addClass('hidden');
+                $('#confirm-bid').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
+            }
+        }
+        
+        // Bid Modal Logic for "Bid Again"
+        $('.bid-again').click(function(e) {
+            e.preventDefault(); // Prevent default anchor behavior
+            const button = $(this);
+            const itemId = button.data('id');
+            const currentBid = parseFloat(button.data('current-bid') || 0);
+            const itemName = button.data('name');
+            
+            $('#bid-item-name').text(itemName);
+            $('#current-bid').text('$' + currentBid.toFixed(2));
+            // Suggest a new bid amount (e.g., 10 units higher)
+            const suggestedBid = Math.ceil(currentBid + 10);
+            $('#bid-amount').val(suggestedBid.toFixed(2)); 
+            updateBidTotals(suggestedBid);
+            
+            // Set the product ID on the confirm button
+            $('#confirm-bid').data('product-id', itemId);
+            $('#confirm-bid').attr('data-product-id', itemId); // For jQuery compatibility
+            $('#bid-error').addClass('hidden'); // Ensure error is hidden initially
+
+            $('#bid-modal').removeClass('hidden');
+        });
+        
+        // Close Modal Logic
+        $('#close-bid-modal, #cancel-bid').click(function() {
+            $('#bid-modal').addClass('hidden');
+            // Reset button state just in case
+            $('#confirm-bid').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed').text('Place Bid');
+            $('#bid-error').addClass('hidden');
+        });
+        
+        // Update Totals on Input
+        $('#bid-amount').on('input', function() {
+            updateBidTotals($(this).val());
+        });
+        
+        // Confirm Bid Submission
+        $('#confirm-bid').click(function(e) {
+            e.preventDefault();
+            
+            const itemId = parseInt($(this).data('product-id') || $(this).attr('data-product-id') || 0);
+            const amount = parseFloat($('#bid-amount').val());
+            
+            console.log("Placing bid (from bids page) on product ID:", itemId, "Amount:", amount);
+            
+            if (!itemId || isNaN(itemId) || itemId <= 0) {
+                console.error("Invalid product ID for bid:", itemId);
+                alert("Error: Invalid product ID");
+                return;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                console.error("Invalid bid amount:", amount);
+                alert("Error: Please enter a valid bid amount");
+                return;
+            }
+            
+            // Final validation before sending
+            const currentBid = parseFloat($('#current-bid').text().replace('$', '').trim());
+            if (amount <= currentBid) {
+                $('#bid-error').text('Your bid must be higher than the current bid ($' + currentBid.toFixed(2) + ')').removeClass('hidden');
+                return;
+            }
+            
+            // Disable the button
+            const confirmButton = $(this);
+            confirmButton.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+            confirmButton.text('Processing...');
+            
+            // Send API request
+            $.ajax({
+                url: '/api/bid', // Assuming same endpoint works
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    product_id: itemId,
+                    amount: amount,
+                    type: 'normal' // Assuming these are always normal auctions in this view
+                }),
+                success: function(response) {
+                    console.log("Bid API response:", response);
+                    if (response.success) {
+                        alert('Bid placed successfully!');
+                        $('#bid-modal').addClass('hidden');
+                        // Reload the page to reflect the changes in the bid history
+                        location.reload(); 
+                    } else {
+                        // Handle potential success:false response from API
+                        alert('Error: ' + (response.error || 'Could not place bid. Please try again.'));
+                        confirmButton.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed').text('Place Bid');
+                    }
+                },
+                error: function(xhr) {
+                    confirmButton.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed').text('Place Bid');
+                    
+                    const response = xhr.responseJSON || {};
+                    console.error("Bid API error:", response);
+                    
+                    let errorMsg = 'Error: ' + (response.error || 'Could not place bid. Please try again.');
+                     if (response.error && response.error.includes("higher than current bid")) {
+                        $('#bid-error').text(response.error).removeClass('hidden');
+                        errorMsg = response.error; // Use specific error message for alert
+                    } else {
+                       $('#bid-error').text(errorMsg).removeClass('hidden'); // Show generic error in modal as well
+                    }
+                    alert(errorMsg);
+                }
+            });
+        });
+
+    });
+</script>
+{% endblock %} 
