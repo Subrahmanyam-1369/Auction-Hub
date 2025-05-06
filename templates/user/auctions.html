@@ -135,7 +135,7 @@
                         </button>
                         {% endif %}
                         <button class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all text-sm view-button" 
-                                data-id="{{ auction.id }}">
+                                data-id="{{ auction.id }}" data-images="{{ auction.images_list|join(',') if auction.images_list else '' }}">
                             <i class="fas fa-eye"></i>
                         </button>
                         <button class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all text-sm watchlist-toggle-btn"
@@ -260,13 +260,10 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <img id="product-image" src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product" class="w-full h-64 object-cover rounded-lg">
-                    <div class="grid grid-cols-4 gap-2 mt-2">
-                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
-                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
-                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
-                        <img src="{{ url_for('static', filename='images/watch.jpg') }}" alt="Product thumbnail" class="w-full h-16 object-cover rounded-lg cursor-pointer">
+                <div id="modal-image-gallery">
+                    <img id="product-image" src="" alt="Product" class="w-full h-64 object-cover rounded-lg mb-2">
+                    <div id="product-thumbnails" class="flex space-x-2 overflow-x-auto pb-2">
+                        <!-- Thumbnails will be added here by JavaScript -->
                     </div>
                 </div>
                 <div>
@@ -516,22 +513,72 @@
             const productDescription = card.find('.auction-desc').text();
             const currentBid = card.find('.text-indigo-600.font-bold').first().text().replace('$', '').trim();
             const timeLeft = card.find('.text-indigo-600.font-bold').last().text().trim();
-            const imageSrc = card.find('img').attr('src');
+            // const imageSrc = card.find('img').attr('src'); // We will handle images below
+
+            // Attempt to get images_list from a data attribute on the button or card
+            // This assumes your backend adds a data-images attribute (e.g., data-images="img1.jpg,img2.jpg") to the button
+            let imagesListString = $(this).data('images'); 
+            if (!imagesListString) { // Fallback to checking the card if not on button
+                imagesListString = card.data('images');
+            }
+            
+            let imagesList = [];
+            if (typeof imagesListString === 'string' && imagesListString.length > 0) {
+                imagesList = imagesListString.split(',').map(name => name.trim()).filter(name => name);
+            } else {
+                // Fallback: if no images_list, try to use the single main_image from the card
+                const mainImageSrcFromCard = card.find('img').attr('src');
+                if (mainImageSrcFromCard) {
+                    const imageName = mainImageSrcFromCard.substring(mainImageSrcFromCard.lastIndexOf('/') + 1);
+                    if (imageName) imagesList.push(imageName);
+                }
+            }
             
             console.log("Product details from card:", {
                 name: productName,
                 description: productDescription,
                 currentBid: currentBid,
-                timeLeft: timeLeft
+                timeLeft: timeLeft,
+                images: imagesList
             });
             
-            // Update modal
+            // Update modal text content
             $('#product-name').text(productName);
             $('#product-description').text(productDescription);
             $('#product-current-bid').text('$' + parseFloat(currentBid).toFixed(2));
-            $('#product-starting-price').text('$' + (parseFloat(currentBid) * 0.9).toFixed(2)); // Estimate starting price
+            // $('#product-starting-price').text('$' + (parseFloat(currentBid) * 0.9).toFixed(2)); // Estimate starting price - adjust if needed
             $('#product-time-left').text(timeLeft);
-            $('#product-image').attr('src', imageSrc);
+            
+            // Clear previous images and thumbnails
+            $('#product-image').attr('src', ''); 
+            const thumbnailsContainer = $('#product-thumbnails');
+            thumbnailsContainer.empty();
+
+            if (imagesList.length > 0) {
+                const firstImageUrl = "{{ url_for('static', filename='images/') }}" + imagesList[0];
+                $('#product-image').attr('src', firstImageUrl);
+
+                imagesList.forEach(function(imageName) {
+                    const imageUrl = "{{ url_for('static', filename='images/') }}" + imageName;
+                    const thumbnail = $(`
+                        <img src="${imageUrl}" alt="Thumbnail"
+                             class="h-12 w-12 object-cover rounded cursor-pointer border border-gray-200 hover:border-indigo-500 modal-thumbnail-image"
+                             data-image="${imageUrl}">
+                    `);
+
+                    thumbnail.click(function() {
+                        $('#product-image').attr('src', $(this).data('image'));
+                        $('.modal-thumbnail-image').removeClass('border-indigo-500 border-2').addClass('border-gray-200');
+                        $(this).removeClass('border-gray-200').addClass('border-indigo-500 border-2');
+                    });
+                    thumbnailsContainer.append(thumbnail);
+                });
+                // Highlight the first thumbnail
+                thumbnailsContainer.find('.modal-thumbnail-image:first').addClass('border-indigo-500 border-2').removeClass('border-gray-200');
+            } else {
+                // Fallback if no images are found
+                $('#product-image').attr('src', "{{ url_for('static', filename='images/placeholder.jpg') }}");
+            }
             
             // Setup bid button in modal with specific data attributes
             $('#modal-bid-button').data('id', itemId);
