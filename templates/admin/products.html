@@ -109,7 +109,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for product in products %}
-                <tr class="product-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                <tr class="product-row bg-white border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                     data-status="{{ 'active' if not has_auction_ended(product.end_date) else 'ended' }}"
                     data-end-date="{{ product.end_date }}">
                     <td class="px-6 py-4 whitespace-nowrap">

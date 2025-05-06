@@ -530,7 +530,14 @@ def user_auctions():
         
         cursor.execute(query)
         normal_auctions = cursor.fetchall()
-        
+
+        # Add images_list for each auction
+        for auction in normal_auctions:
+            if auction.get('image'):
+                auction['images_list'] = [img.strip() for img in auction['image'].split(',') if img.strip()]
+            else:
+                auction['images_list'] = []
+
         for auction in normal_auctions:
             # Add relative time for easier display
             if auction['status'] == 'ended':
@@ -538,7 +545,6 @@ def user_auctions():
             else:
                 days_left = auction['days_left']
                 hours_left = auction['hours_left']
-                
                 if days_left > 0:
                     auction['time_left'] = f"{days_left}d {hours_left}h"
                 elif hours_left > 0:
